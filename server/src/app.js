@@ -14,6 +14,7 @@ app.use(cookieParser());
 //   res.send("Hello Amazon");
 // });
 
+
 // Routes
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/users", usersRoute);

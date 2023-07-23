@@ -1,8 +1,11 @@
+const { default: mongoose } = require("mongoose");
 const {
   getAllUsersService,
   getSingleUserService,
   updateUserInfoService,
-  deleteAccountService,
+  deleteMyAccountService,
+  deleteUserAccountService,
+  updateMyInfoService,
 } = require("../services/users.services");
 
 const pick = require("../utils/pick");
@@ -30,25 +33,34 @@ const getSingleUser = async (req, res) => {
   res.status(statusCode).json({ user });
 };
 
+// Update my info
+const updateMyInfo = async (req, res) => {
+  const { _id: userId, role } = req.user;
+  const newUserInfo = req.body;
+
+  const { error, statusCode, user } = await updateMyInfoService(
+    userId,
+    newUserInfo,
+    role
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  res.status(statusCode).json({ user });
+};
+
 // Update user info
 const updateUserInfo = async (req, res) => {
-  let userId = "";
+  const { userId } = req.params;
+  const currUserId = req.user._id.toString();
 
-  const { role, _id } = req.user;
-  if (role === "user") {
-    userId = _id;
-  } else if (role === "admin") {
-    userId = req.params.userId;
-  }
-
-  let newUserInfo = req.body;
-
-  if (role === "admin") {
-    newUserInfo = pick(req.body, ["role"]);
-  }
+  const newUserInfo = req.body;
 
   const { error, statusCode, user } = await updateUserInfoService(
     userId,
+    currUserId,
     newUserInfo
   );
 
@@ -59,18 +71,10 @@ const updateUserInfo = async (req, res) => {
   res.status(statusCode).json({ user });
 };
 
-// Delete  user
-const deleteUser = async (req, res) => {
-  const { role, _id } = req.user;
-  let userId = "";
-
-  if (role === "user") {
-    userId = _id;
-  } else if (role === "admin") {
-    userId = req.params.userId;
-  }
-
-  const { error, statusCode, message } = await deleteAccountService(userId);
+// Delete  my account
+const deleteMyAccount = async (req, res) => {
+  const { _id: userId } = req.user;
+  const { error, statusCode, message } = await deleteMyAccountService(userId);
 
   if (error) {
     throw error;
@@ -79,21 +83,24 @@ const deleteUser = async (req, res) => {
   res.status(statusCode).json({ msg: message });
 };
 
-// Delete account from admin
-// const deleteAccount = async (req, res) => {
-//   const { userId } = req.params;
-//   const { error, statusCode, message } = await deleteAccountService(userId);
+// Delete  user account
+const deleteUserAccount = async (req, res) => {
+  const { userId } = req.params;
+  const { error, statusCode, message } = await deleteUserService(userId);
 
-//   if (error) {
-//     throw error;
-//   }
+  if (error) {
+    throw error;
+  }
 
-//   res.status(statusCode).json({ msg: message });
-// };
+  res.status(statusCode).json({ msg: message });
+};
 
 module.exports = {
   getAllUsers,
   getSingleUser,
+  updateMyInfo,
+  deleteMyAccount,
+  deleteUserAccount,
+  updateMyInfo,
   updateUserInfo,
-  deleteUser,
 };
